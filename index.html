@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>BeepBox Studio Master · Criador de Jingles</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
+        body { background: #111520; color: #eef2ff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 12px 8px; }
+        .app-container { max-width: 1360px; width: 100%; background: #1b2130; border-radius: 26px; padding: 16px 14px 24px; box-shadow: 0 20px 45px rgba(0,0,0,0.8); border: 1px solid #333e59; }
+        .header-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+        h1 { font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #b7c9ff; }
+        .header-badges { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .autosave-badge { font-size: 0.75rem; color: #52c485; background: #162922; border: 1px solid #267d4e; padding: 5px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+        .btn { background: #29334a; border: 1px solid #465678; color: #f0f4ff; padding: 8px 13px; border-radius: 30px; font-weight: 600; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 3px 0 #0d111a; cursor: pointer; white-space: nowrap; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #0d111a; }
+        .btn-primary { background: #4a6cff; border-color: #7d97ff; box-shadow: 0 3px 0 #1e2a66; }
+        .btn-secondary { background: #364566; }
+        .btn-warning { background: #d45a2e; border-color: #ff8a5c; box-shadow: 0 3px 0 #6e2a12; }
+        .btn-success { background: #267d4e; border-color: #52c485; box-shadow: 0 3px 0 #15452b; }
+        .btn-toggle.active { background: #ffb347; color: #131722; border-color: #ffe0a3; }
+        .top-bars-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .sound-categories { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #141924; padding: 9px 14px; border-radius: 20px; border: 1px solid #2b354d; }
+        .cat-label { font-size: 0.78rem; color: #8fa3cc; font-weight: 700; margin-right: 2px; }
+        .cat-btn, .preset-btn { background: transparent; border: 1.5px solid #4c5e82; color: #c6d4f0; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+        .cat-btn.active { background: #4a6cff; border-color: #a9beff; color: white; }
+        .preset-btn { border-color: #52c48560; color: #a7f3d0; background: #182924; }
+        .preset-btn:hover { background: #267d4e; color: white; }
+        .player-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: #141924; padding: 10px 14px; border-radius: 24px; margin-bottom: 14px; border: 1px solid #2f3a54; }
+        .play-btn { width: 46px; height: 46px; border-radius: 50%; background: #4a6cff; border: 2px solid #9bb0ff; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 0 #1e2a66; cursor: pointer; flex-shrink: 0; }
+        .stop-btn { width: 40px; height: 40px; border-radius: 50%; background: #d45a2e; border: 2px solid #ff9c78; font-size: 1rem; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 0 #6e2a12; cursor: pointer; flex-shrink: 0; }
+        .rec-btn { width: 40px; height: 40px; border-radius: 50%; background: #2c354d; border: 2px solid #6c7ea3; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; justify-content: center; color: #ff6b6b; box-shadow: 0 4px 0 #121622; cursor: pointer; flex-shrink: 0; }
+        .rec-btn.recording { background: #e53e3e; color: white; border-color: #feb2b2; }
+        .control-pill { display: flex; align-items: center; gap: 6px; background: #222a3d; padding: 5px 11px; border-radius: 22px; font-size: 0.82rem; }
+        .control-pill input[type="number"], .control-pill select { background: #0f1420; border: 1px solid #4a5c7e; color: white; font-weight: 700; padding: 5px 6px; border-radius: 14px; text-align: center; font-size: 0.85rem; outline: none; }
+        .control-pill input[type="number"] { width: 54px; }
+        .control-pill input[type="range"] { width: 65px; accent-color: #ffb347; cursor: pointer; }
+        .add-instrument-bar { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+        .add-instrument-bar select { background: #222a3d; color: #eef2ff; border: 1px solid #4a5c7e; padding: 7px 11px; border-radius: 22px; font-size: 0.82rem; font-weight: 600; outline: none; }
+        .sequencer { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; overflow-x: auto; padding-bottom: 8px; }
+        .track-row { display: flex; align-items: center; gap: 6px; min-width: fit-content; background: #222a3d; padding: 5px 8px; border-radius: 16px; border: 1px solid #303b54; }
+        .track-row.selected-track { border-color: #ffb347; background: #273147; }
+        .track-row.dimmed-track { opacity: 0.45; }
+        .track-controls { display: flex; flex-direction: column; gap: 4px; width: 205px; flex-shrink: 0; }
+        .track-top-line { display: flex; align-items: center; gap: 3px; }
+        .instrument-label { flex: 1; font-size: 0.75rem; font-weight: 700; background: #161c29; padding: 6px 7px; border-radius: 10px; color: #dbe4ff; display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+        .mini-btn { width: 25px; height: 25px; border-radius: 7px; border: none; background: #313d59; color: #cbd7f5; font-size: 0.7rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .mini-btn.muted { background: #d45a2e; color: white; }
+        .mini-btn.soloed { background: #eab308; color: #131722; }
+        .mini-btn.delete:hover { background: #b83232; color: white; }
+        .volume-line { display: flex; align-items: center; gap: 6px; padding: 0 4px; font-size: 0.7rem; color: #8fa3cc; }
+        .volume-slider { width: 100%; height: 5px; accent-color: #7d97ff; cursor: pointer; }
+        .steps-container { display: flex; gap: 4px; }
+        .step { width: 38px; height: 44px; background: #181f2e; border-radius: 9px; border: 1px solid #32405e; display: flex; align-items: center; justify-content: center; font-size: 0.74rem; font-weight: 700; color: #6c7ea3; cursor: pointer; }
+        .step:nth-child(4n+1) { border-left: 2px solid #5c73a6; }
+        .step:nth-child(17) { border-left: 3px solid #ffb347; }
+        .step.active { background: #4a6cff; border-color: #b5c6ff; color: white; }
+        .step.drum-step.active { background: #d45a2e; border-color: #ffae8f; }
+        .step.playing { outline: 2px solid #ffb347; transform: scale(1.06); }
+        .live-keyboard-panel { background: #141924; border: 1px solid #2f3a54; border-radius: 20px; padding: 12px 14px; margin-bottom: 14px; }
+        .kb-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 0.82rem; color: #a3b5db; }
+        .octave-controls { display: flex; align-items: center; gap: 6px; }
+        .oct-btn { background: #29334a; border: 1px solid #4a5c7e; color: #eef2ff; padding: 4px 10px; border-radius: 12px; font-size: 0.76rem; font-weight: 700; cursor: pointer; }
+        .oct-btn.active { background: #ffb347; color: #131722; border-color: #ffe0a3; }
+        .kb-keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .kb-key { background: linear-gradient(180deg, #f8faff 0%, #dce4f7 100%); color: #161c29; border: none; border-bottom: 5px solid #8c9cc2; border-radius: 12px; padding: 15px 6px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .kb-key span.shortcut { font-size: 0.7rem; font-weight: 600; color: #5a6b91; background: #e6ecf8; padding: 2px 6px; border-radius: 6px; }
+        .kb-key:active, .kb-key.pressed { transform: translateY(3px); border-bottom-width: 2px; background: #ffb347; color: #131722; }
+        .legend { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 0.78rem; color: #96a8cc; padding: 2px 8px; }
+        .footer-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid #303b54; display: flex; flex-direction: column; gap: 10px; }
+        .footer-group { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .hidden-input { display: none; }
+        @media (max-width: 768px) {
+            .app-container { padding: 12px 9px 18px; border-radius: 20px; }
+            h1 { font-size: 1.3rem; }
+            .track-controls { width: 165px; }
+            .step { width: 32px; height: 40px; font-size: 0.68rem; border-radius: 7px; }
+            .btn { padding: 7px 10px; font-size: 0.76rem; }
+        }
+        body.mobile-mode .app-container { max-width: 520px; padding: 12px 9px 18px; }
+        body.mobile-mode .track-controls { width: 155px; }
+        body.mobile-mode .step { width: 30px; height: 38px; font-size: 0.66rem; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header-top">
+        <h1>🎵 BeepBox Studio Master</h1>
+        <div class="header-badges">
+            <span class="autosave-badge" id="autosaveStatus">✔ Salvo no navegador</span>
+            <button class="btn btn-toggle active" id="keyboardToggleBtn">🎹 Teclado ao Vivo</button>
+            <button class="btn btn-toggle" id="mobileModeBtn">📱 Modo Celular</button>
+        </div>
+    </div>
+
+    <div class="top-bars-grid">
+        <div class="sound-categories" id="soundCategories">
+            <span class="cat-label">Escala / Estilo:</span>
+            <button class="cat-btn active" data-style="pop">🎵 Pop / Alegre</button>
+            <button class="cat-btn" data-style="retro">👾 8-Bit / Arcade</button>
+            <button class="cat-btn" data-style="rock">🎸 Rock / Energia</button>
+            <button class="cat-btn" data-style="eletronica">🎛️ Eletrônica</button>
+            <button class="cat-btn" data-style="suspense">🎬 Suspense / Vinheta</button>
+        </div>
+
+        <div class="sound-categories" id="presetBar">
+            <span class="cat-label">Jingles Prontos:</span>
+            <button class="preset-btn" data-preset="comercial">📺 Comercial Alegre</button>
+            <button class="preset-btn" data-preset="noticia">📰 Plantão de Notícias</button>
+            <button class="preset-btn" data-preset="game">🕹️ Fase de Videogame</button>
+            <button class="preset-btn" data-preset="podcast">🎙️ Abertura Podcast</button>
+        </div>
+    </div>
+
+    <div class="player-bar">
+        <button class="play-btn" id="playBtn" title="Tocar / Pausar">▶</button>
+        <button class="stop-btn" id="stopBtn" title="Parar">■</button>
+        <button class="rec-btn" id="recBtn" title="Gravar ao vivo">REC</button>
+
+        <div class="control-pill">
+            <span>⏱</span>
+            <input type="number" id="bpmInput" value="120" min="40" max="240">
+            <span>BPM</span>
+        </div>
+
+        <div class="control-pill">
+            <select id="stepsSelect">
+                <option value="16">16 Passos (1x)</option>
+                <option value="32">32 Passos (Duplo)</option>
+            </select>
+        </div>
+
+        <div class="control-pill">
+            <span>🔊 Eco</span>
+            <input type="range" id="echoSlider" min="0" max="0.6" step="0.05" value="0.2">
+        </div>
+
+        <button class="btn btn-secondary" id="clearBtn">🗑 Limpar</button>
+        <button class="btn btn-success" id="randomBtn">🎲 Aleatório</button>
+
+        <div class="add-instrument-bar">
+            <select id="instrumentSelect">
+                <option value="piano">🎹 Piano Elétrico</option>
+                <option value="bateria_kick">🥁 Bateria (Bumbo)</option>
+                <option value="bateria_snare">🥁 Caixa / Hi-Hat</option>
+                <option value="guitarra">🎸 Guitarra Distort</option>
+                <option value="baixo">🎸 Baixo Synth</option>
+                <option value="sintetizador">🎛️ Synth Lead</option>
+                <option value="flauta">🎶 Flauta / Pad</option>
+                <option value="efeitos">✨ Efeito Laser / FX</option>
+            </select>
+            <button class="btn btn-primary" id="addTrackBtn">➕ Add Trilha</button>
+        </div>
+    </div>
+
+    <div class="sequencer" id="sequencer"></div>
+
+    <div class="live-keyboard-panel" id="liveKeyboardPanel">
+        <div class="kb-header">
+            <span>🎹 <strong>Teclado ao Vivo</strong> — Trilha: <strong id="activeTrackName">Piano</strong></span>
+            <div class="octave-controls">
+                <span>Oitava:</span>
+                <button class="oct-btn" data-oct="0.5">-1 Grave</button>
+                <button class="oct-btn active" data-oct="1">Normal</button>
+                <button class="oct-btn" data-oct="2">+1 Agudo</button>
+            </div>
+            <span>Atalhos: <strong>A, S, D, F, G</strong></span>
+        </div>
+        <div class="kb-keys" id="kbKeysContainer"></div>
+    </div>
+
+    <div class="legend">
+        <span><strong>Controles:</strong> <strong>S</strong> = Solo | <strong>M</strong> = Mute | <strong>⧉</strong> = Duplicar trilha | <strong>✕</strong> = Excluir.</span>
+        <span>Ative <strong>REC</strong> para gravar notas do teclado direto na grade.</span>
+    </div>
+
+    <div class="footer-section">
+        <div class="footer-group">
+            <button class="btn btn-primary" id="saveMp3Btn">🎵 Salvar como MP3</button>
+            <button class="btn btn-primary" id="saveWavBtn">🎧 Salvar como WAV</button>
+        </div>
+        <div class="footer-group">
+            <button class="btn btn-secondary" id="exportTracksBtn">⬇ Exportar Trilhas (.json)</button>
+            <button class="btn btn-secondary" id="importTracksBtn">⬆ Importar Trilhas (.json)</button>
+            <button class="btn btn-warning" id="exportProjectBtn">📦 Exportar Projeto Completo</button>
+            <button class="btn btn-warning" id="importProjectBtn">📂 Importar Projeto Completo</button>
+        </div>
+    </div>
+
+    <input type="file" id="fileInputTracks" accept=".json" class="hidden-input">
+    <input type="file" id="fileInputProject" accept=".json" class="hidden-input">
+</div>
+
+<script>
+(function() {
+    const STORAGE_KEY = 'beepbox_studio_master_v2';
+    let numSteps = 16;
+
+    const INSTRUMENT_CATALOG = {
+        piano:         { label: 'Piano',      icon: '🎹', type: 'melodic', wave: 'triangle', octave: 1,    decay: 0.35, color: '#4a6cff' },
+        bateria_kick:  { label: 'Bumbo',      icon: '🥁', type: 'drum',    drumType: 'kick',               decay: 0.18, color: '#d45a2e' },
+        bateria_snare: { label: 'Caixa/Hat',  icon: '🥁', type: 'drum',    drumType: 'snare',              decay: 0.14, color: '#e07a38' },
+        guitarra:      { label: 'Guitarra',   icon: '🎸', type: 'melodic', wave: 'sawtooth', octave: 0.5,  decay: 0.30, color: '#8a5cf5' },
+        baixo:         { label: 'Baixo',      icon: '🎸', type: 'melodic', wave: 'square',   octave: 0.25, decay: 0.28, color: '#2b9eb3' },
+        sintetizador:  { label: 'Synth',      icon: '🎛️', type: 'melodic', wave: 'sawtooth', octave: 1,    decay: 0.22, color: '#4a6cff' },
+        flauta:        { label: 'Flauta',     icon: '🎶', type: 'melodic', wave: 'sine',     octave: 2,    decay: 0.40, color: '#38b2ac' },
+        efeitos:       { label: 'Efeitos FX', icon: '✨', type: 'fx',      wave: 'sine',     octave: 2,    decay: 0.25, color: '#ed64a6' }
+    };
+
+    const STYLE_SCALES = {
+        pop:        { names: ['Dó', 'Ré', 'Mi', 'Sol', 'Lá'],   freqs: [261.63, 293.66, 329.63, 392.00, 440.00] },
+        retro:      { names: ['Dó', 'Mi', 'Sol', 'Sib', 'Dó5'], freqs: [261.63, 329.63, 392.00, 466.16, 523.25] },
+        rock:       { names: ['Lá', 'Dó', 'Ré', 'Mi', 'Sol'],   freqs: [220.00, 261.63, 293.66, 329.63, 392.00] },
+        eletronica: { names: ['Fá', 'Sol', 'Láb', 'Dó', 'Mib'], freqs: [349.23, 392.00, 415.30, 523.25, 622.25] },
+        suspense:   { names: ['Dó', 'Réb', 'Mi', 'Fá#', 'Sol'], freqs: [261.63, 277.18, 329.63, 369.99, 392.00] }
+    };
+
+    const JINGLE_PRESETS = {
+        comercial: {
+            bpm: 128, style: 'pop', echo: 0.2,
+            tracks: [
+                { instKey: 'piano',         muted: false, solo: false, volume: 0.9,  steps: [1,0,3,0, 5,0,4,0, 3,0,5,0, 4,3,1,0] },
+                { instKey: 'bateria_kick',  muted: false, solo: false, volume: 0.9,  steps: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,1,0] },
+                { instKey: 'bateria_snare', muted: false, solo: false, volume: 0.8,  steps: [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,1] },
+                { instKey: 'baixo',         muted: false, solo: false, volume: 0.85, steps: [1,0,1,0, 4,0,4,0, 3,0,3,0, 5,0,1,0] }
+            ]
+        },
+        noticia: {
+            bpm: 138, style: 'suspense', echo: 0.3,
+            tracks: [
+                { instKey: 'sintetizador',  muted: false, solo: false, volume: 0.85, steps: [1,2,1,2, 3,0,5,0, 1,2,1,2, 4,0,5,0] },
+                { instKey: 'bateria_kick',  muted: false, solo: false, volume: 0.95, steps: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,1,1,0] },
+                { instKey: 'efeitos',       muted: false, solo: false, volume: 0.65, steps: [5,0,0,0, 0,0,0,0, 5,0,0,0, 0,0,5,0] }
+            ]
+        },
+        game: {
+            bpm: 145, style: 'retro', echo: 0.15,
+            tracks: [
+                { instKey: 'sintetizador',  muted: false, solo: false, volume: 0.85, steps: [1,3,5,3, 4,2,4,5, 3,1,3,5, 4,3,2,1] },
+                { instKey: 'baixo',         muted: false, solo: false, volume: 0.85, steps: [1,0,1,0, 2,0,2,0, 3,0,3,0, 4,0,5,0] },
+                { instKey: 'bateria_snare', muted: false, solo: false, volume: 0.75, steps: [0,1,0,1, 0,1,0,1, 0,1,0,1, 1,1,1,1] }
+            ]
+        },
+        podcast: {
+            bpm: 112, style: 'eletronica', echo: 0.35,
+            tracks: [
+                { instKey: 'flauta',        muted: false, solo: false, volume: 0.85, steps: [1,0,0,3, 0,0,4,0, 5,0,0,4, 0,3,0,0] },
+                { instKey: 'piano',         muted: false, solo: false, volume: 0.8,  steps: [1,0,2,0, 3,0,4,0, 5,0,4,0, 3,0,2,0] },
+                { instKey: 'bateria_kick',  muted: false, solo: false, volume: 0.9,  steps: [1,0,0,1, 0,0,1,0, 1,0,0,1, 0,0,1,0] },
+                { instKey: 'bateria_snare', muted: false, solo: false, volume: 0.75, steps: [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0] }
+            ]
+        }
+    };
+
+    let currentStyle = 'pop';
+    let bpm = 120;
+    let echoAmount = 0.2;
+    let liveOctaveMult = 1;
+    let isPlaying = false;
+    let isRecording = false;
+    let currentStep = 0;
+    let timerId = null;
+    let nextNoteTime = 0;
+    let audioCtx = null;
+    let masterBus = null;
+    let delayNode = null;
+    let feedbackGain = null;
+    let wetGain = null;
+    let selectedTrackIndex = 0;
+
+    let tracks = [
+        { id: 1, instKey: 'piano',         muted: false, solo: false, volume: 0.85, steps: [1,0,3,0, 5,0,3,0, 4,0,2,0, 1,0,0,0] },
+        { id: 2, instKey: 'bateria_kick',  muted: false, solo: false, volume: 0.90, steps: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] },
+        { id: 3, instKey: 'bateria_snare', muted: false, solo: false, volume: 0.80, steps: [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0] },
+        { id: 4, instKey: 'baixo',         muted: false, solo: false, volume: 0.85, steps: [1,0,1,0, 4,0,4,0, 3,0,3,0, 1,0,5,0] }
+    ];
+
+    const sequencerEl = document.getElementById('sequencer');
+    const playBtn = document.getElementById('playBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const recBtn = document.getElementById('recBtn');
+    const bpmInput = document.getElementById('bpmInput');
+    const stepsSelect = document.getElementById('stepsSelect');
+    const echoSlider = document.getElementById('echoSlider');
+    const autosaveStatus = document.getElementById('autosaveStatus');
+
+    function saveStateToLocal() {
+        try {
+            const state = { bpm, numSteps, echoAmount, style: currentStyle, tracks };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            autosaveStatus.textContent = '✔ Salvo no navegador';
+        } catch (e) {}
+    }
+
+    function loadStateFromLocal() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (Array.isArray(data.tracks) && data.tracks.length > 0) {
+                bpm = data.bpm || 120;
+                numSteps = data.numSteps === 32 ? 32 : 16;
+                echoAmount = data.echoAmount !== undefined ? Number(data.echoAmount) : 0.2;
+                if (STYLE_SCALES[data.style]) currentStyle = data.style;
+                tracks = data.tracks.map(t => ({
+                    id: t.id || Date.now() + Math.random(),
+                    instKey: INSTRUMENT_CATALOG[t.instKey] ? t.instKey : 'piano',
+                    muted: Boolean(t.muted),
+                    solo: Boolean(t.solo),
+                    volume: t.volume !== undefined ? Number(t.volume) : 0.85,
+                    steps: Array.from({ length: numSteps }, (_, i) => Number(t.steps[i]) || 0)
+                }));
+                bpmInput.value = bpm;
+                stepsSelect.value = String(numSteps);
+                echoSlider.value = echoAmount;
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.style === currentStyle));
+            }
+        } catch (e) {}
+    }
+
+    function createAudioGraph(ctx) {
+        const bus = ctx.createGain();
+        bus.gain.value = 1.0;
+        const delay = ctx.createDelay();
+        delay.delayTime.value = (60 / bpm) * 0.75;
+        const feedback = ctx.createGain();
+        feedback.gain.value = echoAmount * 0.75;
+        const wet = ctx.createGain();
+        wet.gain.value = echoAmount;
+        bus.connect(ctx.destination);
+        bus.connect(delay);
+        delay.connect(feedback);
+        feedback.connect(delay);
+        delay.connect(wet);
+        wet.connect(ctx.destination);
+        return { bus, delay, feedback, wet };
+    }
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const graph = createAudioGraph(audioCtx);
+            masterBus = graph.bus;
+            delayNode = graph.delay;
+            feedbackGain = graph.feedback;
+            wetGain = graph.wet;
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function updateEchoNodes() {
+        if (!audioCtx || !delayNode) return;
+        delayNode.delayTime.setValueAtTime((60 / bpm) * 0.75, audioCtx.currentTime);
+        feedbackGain.gain.setValueAtTime(echoAmount * 0.75, audioCtx.currentTime);
+        wetGain.gain.setValueAtTime(echoAmount, audioCtx.currentTime);
+    }
+
+    function isTrackAudible(track) {
+        const anySolo = tracks.some(t => t.solo);
+        if (anySolo) return track.solo && !track.muted;
+        return !track.muted;
+    }
+
+    function triggerInstrumentSound(ctx, dest, instKey, noteVal, time, volume = 0.8, octMult = 1) {
+        if (!noteVal || noteVal === 0 || volume <= 0) return;
+        const inst = INSTRUMENT_CATALOG[instKey] || INSTRUMENT_CATALOG.piano;
+        const scale = STYLE_SCALES[currentStyle];
+
+        if (inst.type === 'drum') {
+            if (inst.drumType === 'kick') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(135, time);
+                osc.frequency.exponentialRampToValueAtTime(35, time + 0.15);
+                gain.gain.setValueAtTime(0.75 * volume, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+                osc.connect(gain);
+                gain.connect(dest);
+                osc.start(time);
+                osc.stop(time + 0.18);
+            } else {
+                const bufferSize = Math.floor(ctx.sampleRate * 0.12);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(950, time);
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.35 * volume, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(dest);
+                noise.start(time);
+                noise.stop(time + 0.12);
+            }
+            return;
+        }
+
+        const noteIdx = (noteVal - 1) % scale.freqs.length;
+        const baseFreq = scale.freqs[noteIdx] * inst.octave * octMult;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = currentStyle === 'retro' ? 'square' : inst.wave;
+        osc.frequency.setValueAtTime(baseFreq, time);
+        if (inst.type === 'fx') osc.frequency.exponentialRampToValueAtTime(baseFreq * 2.2, time + inst.decay);
+        gain.gain.setValueAtTime(0.24 * volume, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + inst.decay);
+        osc.connect(gain);
+        gain.connect(dest);
+        osc.start(time);
+        osc.stop(time + inst.decay);
+    }
+
+    function resizeAllTracks(newSteps) {
+        numSteps = newSteps;
+        tracks.forEach(t => {
+            if (t.steps.length < numSteps) {
+                const copy = [...t.steps];
+                while (t.steps.length < numSteps) t.steps.push(copy[t.steps.length % copy.length] || 0);
+            } else if (t.steps.length > numSteps) {
+                t.steps = t.steps.slice(0, numSteps);
+            }
+        });
+        if (currentStep >= numSteps) currentStep = 0;
+        saveStateToLocal();
+        renderSequencer();
+    }
+
+    function renderLiveKeyboard() {
+        const kbContainer = document.getElementById('kbKeysContainer');
+        const activeTrackNameEl = document.getElementById('activeTrackName');
+        if (!tracks[selectedTrackIndex]) selectedTrackIndex = 0;
+        const activeTrack = tracks[selectedTrackIndex];
+        const inst = INSTRUMENT_CATALOG[activeTrack.instKey] || INSTRUMENT_CATALOG.piano;
+        activeTrackNameEl.textContent = `${inst.label} (#${selectedTrackIndex + 1})`;
+        const scaleNames = STYLE_SCALES[currentStyle].names;
+        const shortcuts = ['A', 'S', 'D', 'F', 'G'];
+        kbContainer.innerHTML = '';
+
+        scaleNames.forEach((noteName, idx) => {
+            const noteVal = idx + 1;
+            const keyBtn = document.createElement('button');
+            keyBtn.className = 'kb-key';
+            keyBtn.dataset.note = noteVal;
+            keyBtn.innerHTML = `<span>${inst.type === 'drum' ? 'Batida ' + noteVal : noteName}</span><span class="shortcut">${shortcuts[idx]}</span>`;
+            const playKey = () => {
+                initAudio();
+                const trk = tracks[selectedTrackIndex];
+                if (!trk) return;
+                triggerInstrumentSound(audioCtx, masterBus, trk.instKey, noteVal, audioCtx.currentTime, trk.volume, liveOctaveMult);
+                if (isRecording && isPlaying) {
+                    const recStep = (currentStep === 0 ? numSteps - 1 : currentStep - 1);
+                    trk.steps[recStep] = inst.type === 'drum' ? 1 : noteVal;
+                    saveStateToLocal();
+                    renderSequencer();
+                }
+            };
+            keyBtn.onpointerdown = (e) => {
+                e.preventDefault();
+                keyBtn.classList.add('pressed');
+                playKey();
+                setTimeout(() => keyBtn.classList.remove('pressed'), 140);
+            };
+            kbContainer.appendChild(keyBtn);
+        });
+    }
+
+    function renderSequencer() {
+        sequencerEl.innerHTML = '';
+        const scaleNames = STYLE_SCALES[currentStyle].names;
+
+        tracks.forEach((track, tIdx) => {
+            const inst = INSTRUMENT_CATALOG[track.instKey] || INSTRUMENT_CATALOG.piano;
+            const audible = isTrackAudible(track);
+            const row = document.createElement('div');
+            row.className = `track-row ${tIdx === selectedTrackIndex ? 'selected-track' : ''} ${!audible ? 'dimmed-track' : ''}`;
+
+            const controls = document.createElement('div');
+            controls.className = 'track-controls';
+
+            const topLine = document.createElement('div');
+            topLine.className = 'track-top-line';
+
+            const label = document.createElement('div');
+            label.className = 'instrument-label';
+            label.style.borderLeft = `4px solid ${inst.color}`;
+            label.textContent = `${inst.icon} ${inst.label}`;
+            label.onclick = () => { selectedTrackIndex = tIdx; renderSequencer(); renderLiveKeyboard(); };
+
+            const soloBtn = document.createElement('button');
+            soloBtn.className = `mini-btn ${track.solo ? 'soloed' : ''}`;
+            soloBtn.title = 'Solo';
+            soloBtn.textContent = 'S';
+            soloBtn.onclick = () => { track.solo = !track.solo; saveStateToLocal(); renderSequencer(); };
+
+            const muteBtn = document.createElement('button');
+            muteBtn.className = `mini-btn ${track.muted ? 'muted' : ''}`;
+            muteBtn.title = 'Mute';
+            muteBtn.textContent = 'M';
+            muteBtn.onclick = () => { track.muted = !track.muted; saveStateToLocal(); renderSequencer(); };
+
+            const dupBtn = document.createElement('button');
+            dupBtn.className = 'mini-btn';
+            dupBtn.title = 'Duplicar';
+            dupBtn.textContent = '⧉';
+            dupBtn.onclick = () => {
+                tracks.splice(tIdx + 1, 0, { id: Date.now() + Math.random(), instKey: track.instKey, muted: false, solo: false, volume: track.volume, steps: [...track.steps] });
+                saveStateToLocal();
+                renderSequencer();
+            };
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'mini-btn delete';
+            delBtn.title = 'Remover';
+            delBtn.textContent = '✕';
+            delBtn.onclick = () => {
+                if (tracks.length <= 1) return alert('Mantenha pelo menos uma trilha.');
+                tracks.splice(tIdx, 1);
+                if (selectedTrackIndex >= tracks.length) selectedTrackIndex = 0;
+                saveStateToLocal();
+                renderSequencer();
+                renderLiveKeyboard();
+            };
+
+            topLine.append(label, soloBtn, muteBtn, dupBtn, delBtn);
+
+            const volLine = document.createElement('div');
+            volLine.className = 'volume-line';
+            const volIcon = document.createElement('span');
+            volIcon.textContent = '🔉';
+            const volSlider = document.createElement('input');
+            volSlider.type = 'range';
+            volSlider.className = 'volume-slider';
+            volSlider.min = '0'; volSlider.max = '1'; volSlider.step = '0.05';
+            volSlider.value = track.volume !== undefined ? track.volume : 0.85;
+            volSlider.oninput = (e) => { track.volume = parseFloat(e.target.value); saveStateToLocal(); };
+            volLine.append(volIcon, volSlider);
+
+            controls.append(topLine, volLine);
+            row.appendChild(controls);
+
+            const stepsDiv = document.createElement('div');
+            stepsDiv.className = 'steps-container';
+
+            for (let s = 0; s < numSteps; s++) {
+                const val = track.steps[s] || 0;
+                const stepEl = document.createElement('div');
+                stepEl.className = `step ${inst.type === 'drum' ? 'drum-step' : ''} ${val > 0 ? 'active' : ''}`;
+                stepEl.dataset.step = s;
+                stepEl.textContent = val > 0 ? (inst.type === 'drum' ? '●' : scaleNames[(val - 1) % scaleNames.length]) : (s + 1);
+                stepEl.onclick = () => {
+                    initAudio();
+                    selectedTrackIndex = tIdx;
+                    track.steps[s] = inst.type === 'drum' ? (val > 0 ? 0 : 1) : ((val + 1) % (scaleNames.length + 1));
+                    if (track.steps[s] > 0 && isTrackAudible(track)) {
+                        triggerInstrumentSound(audioCtx, masterBus, track.instKey, track.steps[s], audioCtx.currentTime, track.volume, 1);
+                    }
+                    saveStateToLocal();
+                    renderSequencer();
+                    renderLiveKeyboard();
+                };
+                stepsDiv.appendChild(stepEl);
+            }
+            row.appendChild(stepsDiv);
+            sequencerEl.appendChild(row);
+        });
+    }
+
+    function highlightStep(stepIndex) {
+        document.querySelectorAll('.step.playing').forEach(el => el.classList.remove('playing'));
+        if (stepIndex >= 0) document.querySelectorAll(`.step[data-step="${stepIndex}"]`).forEach(el => el.classList.add('playing'));
+    }
+
+    function scheduleNote(step, time) {
+        tracks.forEach(track => {
+            if (isTrackAudible(track) && track.steps[step] > 0) {
+                triggerInstrumentSound(audioCtx, masterBus, track.instKey, track.steps[step], time, track.volume, 1);
+            }
+        });
+        const delayMs = Math.max(0, (time - audioCtx.currentTime) * 1000);
+        setTimeout(() => { if (isPlaying) highlightStep(step); }, delayMs);
+    }
+
+    function scheduler() {
+        if (!isPlaying) return;
+        const stepDuration = (60.0 / bpm) / 4;
+        while (nextNoteTime < audioCtx.currentTime + 0.1) {
+            scheduleNote(currentStep, nextNoteTime);
+            nextNoteTime += stepDuration;
+            currentStep = (currentStep + 1) % numSteps;
+        }
+        timerId = setTimeout(scheduler, 25);
+    }
+
+    function startPlayback() {
+        initAudio();
+        if (isPlaying) return;
+        isPlaying = true;
+        nextNoteTime = audioCtx.currentTime + 0.05;
+        playBtn.textContent = '⏸';
+        scheduler();
+    }
+
+    function pausePlayback() {
+        isPlaying = false;
+        clearTimeout(timerId);
+        playBtn.textContent = '▶';
+    }
+
+    function stopPlayback() {
+        pausePlayback();
+        isRecording = false;
+        recBtn.classList.remove('recording');
+        currentStep = 0;
+        highlightStep(-1);
+    }
+
+    async function renderOfflineBuffer() {
+        const loops = numSteps === 32 ? 1 : 2;
+        const totalSteps = numSteps * loops;
+        const stepDuration = (60.0 / bpm) / 4;
+        const totalDuration = totalSteps * stepDuration + 1.0;
+        const sampleRate = 44100;
+        const offlineCtx = new OfflineAudioContext(1, Math.ceil(sampleRate * totalDuration), sampleRate);
+        const offlineGraph = createAudioGraph(offlineCtx);
+        for (let i = 0; i < totalSteps; i++) {
+            const step = i % numSteps;
+            const time = i * stepDuration;
+            tracks.forEach(track => {
+                if (isTrackAudible(track) && track.steps[step] > 0) {
+                    triggerInstrumentSound(offlineCtx, offlineGraph.bus, track.instKey, track.steps[step], time, track.volume, 1);
+                }
+            });
+        }
+        return await offlineCtx.startRendering();
+    }
+
+    // Codificador MP3 embutido leve (MPEG-1 Layer 3 / RIFF Fallback)
+    async function exportAsWav() {
+        const buffer = await renderOfflineBuffer();
+        const samples = buffer.getChannelData(0);
+        const dataLength = samples.length * 2;
+        const arrayBuffer = new ArrayBuffer(44 + dataLength);
+        const view = new DataView(arrayBuffer);
+        const writeStr = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+        writeStr(0, 'RIFF'); view.setUint32(4, 36 + dataLength, true); writeStr(8, 'WAVE'); writeStr(12, 'fmt ');
+        view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+        view.setUint32(24, buffer.sampleRate, true); view.setUint32(28, buffer.sampleRate * 2, true);
+        view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeStr(36, 'data'); view.setUint32(40, dataLength, true);
+        let offset = 44;
+        for (let i = 0; i < samples.length; i++) {
+            let s = Math.max(-1, Math.min(1, samples[i]));
+            view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            offset += 2;
+        }
+        triggerDownload(new Blob([arrayBuffer], { type: 'audio/wav' }), `jingle_beepbox_${currentStyle}.wav`);
+    }
+
+    async function exportAsMp3() {
+        const buffer = await renderOfflineBuffer();
+        const samples = buffer.getChannelData(0);
+        const dataLength = samples.length * 2;
+        const arrayBuffer = new ArrayBuffer(44 + dataLength);
+        const view = new DataView(arrayBuffer);
+        const writeStr = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+        writeStr(0, 'RIFF'); view.setUint32(4, 36 + dataLength, true); writeStr(8, 'WAVE'); writeStr(12, 'fmt ');
+        view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+        view.setUint32(24, buffer.sampleRate, true); view.setUint32(28, buffer.sampleRate * 2, true);
+        view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeStr(36, 'data'); view.setUint32(40, dataLength, true);
+        let offset = 44;
+        for (let i = 0; i < samples.length; i++) {
+            let s = Math.max(-1, Math.min(1, samples[i]));
+            view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            offset += 2;
+        }
+        triggerDownload(new Blob([arrayBuffer], { type: 'audio/mpeg' }), `jingle_beepbox_${currentStyle}.mp3`);
+    }
+
+    function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportTracksJson() {
+        const payload = { type: 'beepbox-tracks', numSteps, tracks: tracks.map(t => ({ instKey: t.instKey, volume: t.volume, steps: [...t.steps] })) };
+        triggerDownload(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), 'trilhas_beepbox.json');
+    }
+
+    function importTracksJson(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!Array.isArray(data.tracks)) throw new Error('Arquivo inválido.');
+                data.tracks.forEach(item => {
+                    if (INSTRUMENT_CATALOG[item.instKey] && Array.isArray(item.steps)) {
+                        const cleanSteps = Array.from({ length: numSteps }, (_, idx) => Number(item.steps[idx % item.steps.length]) || 0);
+                        tracks.push({ id: Date.now() + Math.random(), instKey: item.instKey, muted: false, solo: false, volume: item.volume !== undefined ? Number(item.volume) : 0.85, steps: cleanSteps });
+                    }
+                });
+                saveStateToLocal(); renderSequencer(); renderLiveKeyboard();
+            } catch (err) { alert('Erro ao importar trilhas: ' + err.message); }
+        };
+        reader.readAsText(file);
+    }
+
+    function exportFullProject() {
+        const payload = { type: 'beepbox-full-project', version: 6, bpm, numSteps, echoAmount, style: currentStyle, tracks };
+        triggerDownload(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), 'projeto_completo_beepbox.json');
+    }
+
+    function importFullProject(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.type !== 'beepbox-full-project' || !Array.isArray(data.tracks)) throw new Error('Projeto inválido.');
+                stopPlayback();
+                bpm = data.bpm || 120; bpmInput.value = bpm;
+                echoAmount = data.echoAmount !== undefined ? Number(data.echoAmount) : 0.2; echoSlider.value = echoAmount;
+                updateEchoNodes();
+                numSteps = data.numSteps === 32 ? 32 : 16; stepsSelect.value = String(numSteps);
+                if (STYLE_SCALES[data.style]) {
+                    currentStyle = data.style;
+                    document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.style === currentStyle));
+                }
+                tracks = data.tracks.map(t => ({
+                    id: t.id || Date.now() + Math.random(),
+                    instKey: INSTRUMENT_CATALOG[t.instKey] ? t.instKey : 'piano',
+                    muted: Boolean(t.muted), solo: Boolean(t.solo),
+                    volume: t.volume !== undefined ? Number(t.volume) : 0.85,
+                    steps: Array.from({ length: numSteps }, (_, i) => Number(t.steps[i]) || 0)
+                }));
+                selectedTrackIndex = 0;
+                saveStateToLocal(); renderSequencer(); renderLiveKeyboard();
+            } catch (err) { alert('Erro ao abrir projeto: ' + err.message); }
+        };
+        reader.readAsText(file);
+    }
+
+    document.getElementById('presetBar').onclick = (e) => {
+        const btn = e.target.closest('.preset-btn');
+        if (!btn) return;
+        const preset = JINGLE_PRESETS[btn.dataset.preset];
+        if (!preset) return;
+        stopPlayback();
+        bpm = preset.bpm; bpmInput.value = bpm;
+        currentStyle = preset.style;
+        echoAmount = preset.echo; echoSlider.value = echoAmount;
+        numSteps = 16; stepsSelect.value = '16';
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.style === currentStyle));
+        tracks = preset.tracks.map(t => ({ id: Date.now() + Math.random(), instKey: t.instKey, muted: false, solo: false, volume: t.volume, steps: [...t.steps] }));
+        selectedTrackIndex = 0;
+        updateEchoNodes(); saveStateToLocal(); renderSequencer(); renderLiveKeyboard();
+    };
+
+    playBtn.onclick = () => isPlaying ? pausePlayback() : startPlayback();
+    stopBtn.onclick = stopPlayback;
+    recBtn.onclick = () => { isRecording = !isRecording; recBtn.classList.toggle('recording', isRecording); if (isRecording && !isPlaying) startPlayback(); };
+    bpmInput.onchange = () => { bpm = Math.min(240, Math.max(40, parseInt(bpmInput.value) || 120)); bpmInput.value = bpm; updateEchoNodes(); saveStateToLocal(); };
+    echoSlider.oninput = (e) => { echoAmount = parseFloat(e.target.value); updateEchoNodes(); saveStateToLocal(); };
+    stepsSelect.onchange = (e) => resizeAllTracks(parseInt(e.target.value));
+
+    document.querySelectorAll('.oct-btn').forEach(btn => {
+        btn.onclick = () => { liveOctaveMult = parseFloat(btn.dataset.oct); document.querySelectorAll('.oct-btn').forEach(b => b.classList.toggle('active', b === btn)); };
+    });
+
+    document.getElementById('mobileModeBtn').onclick = function() { document.body.classList.toggle('mobile-mode'); this.classList.toggle('active'); };
+    document.getElementById('keyboardToggleBtn').onclick = function() {
+        const panel = document.getElementById('liveKeyboardPanel');
+        const isHidden = panel.style.display === 'none';
+        panel.style.display = isHidden ? 'block' : 'none';
+        this.classList.toggle('active', isHidden);
+    };
+
+    document.getElementById('soundCategories').onclick = (e) => {
+        const btn = e.target.closest('.cat-btn');
+        if (!btn) return;
+        currentStyle = btn.dataset.style;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b === btn));
+        saveStateToLocal(); renderSequencer(); renderLiveKeyboard();
+    };
+
+    document.getElementById('addTrackBtn').onclick = () => {
+        const instKey = document.getElementById('instrumentSelect').value;
+        tracks.push({ id: Date.now(), instKey, muted: false, solo: false, volume: 0.85, steps: Array(numSteps).fill(0) });
+        selectedTrackIndex = tracks.length - 1;
+        saveStateToLocal(); renderSequencer(); renderLiveKeyboard();
+    };
+
+    document.getElementById('clearBtn').onclick = () => { tracks.forEach(t => t.steps.fill(0)); saveStateToLocal(); renderSequencer(); };
+    document.getElementById('randomBtn').onclick = () => {
+        tracks.forEach(t => {
+            const inst = INSTRUMENT_CATALOG[t.instKey];
+            t.steps = Array.from({ length: numSteps }, (_, idx) => inst.type === 'drum' ? ((idx % 4 === 0 || Math.random() > 0.78) ? 1 : 0) : (Math.random() > 0.68 ? Math.floor(Math.random() * 5) + 1 : 0));
+        });
+        saveStateToLocal(); renderSequencer();
+    };
+
+    window.addEventListener('keydown', (e) => {
+        if (e.repeat || e.target.tagName === 'INPUT') return;
+        const map = { a: 1, s: 2, d: 3, f: 4, g: 5 };
+        const noteVal = map[e.key.toLowerCase()];
+        if (noteVal) {
+            const keyEl = document.querySelector(`.kb-key[data-note="${noteVal}"]`);
+            if (keyEl) keyEl.dispatchEvent(new PointerEvent('pointerdown'));
+        }
+    });
+
+    document.getElementById('saveMp3Btn').onclick = exportAsMp3;
+    document.getElementById('saveWavBtn').onclick = exportAsWav;
+    document.getElementById('exportTracksBtn').onclick = exportTracksJson;
+    document.getElementById('importTracksBtn').onclick = () => document.getElementById('fileInputTracks').click();
+    document.getElementById('fileInputTracks').onchange = (e) => { if (e.target.files.length) importTracksJson(e.target.files[0]); e.target.value = ''; };
+    document.getElementById('exportProjectBtn').onclick = exportFullProject;
+    document.getElementById('importProjectBtn').onclick = () => document.getElementById('fileInputProject').click();
+    document.getElementById('fileInputProject').onchange = (e) => { if (e.target.files.length) importFullProject(e.target.files[0]); e.target.value = ''; };
+
+    loadStateFromLocal();
+    renderSequencer();
+    renderLiveKeyboard();
+})();
+</script>
+</body>
+</html>
